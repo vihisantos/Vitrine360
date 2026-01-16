@@ -5,6 +5,21 @@ exports.createProduct = async (req, res) => {
     const user_id = req.user.id; // From Auth Middleware
 
     try {
+        // 1. Check User Plan and Current Product Count
+        const userQuery = await db.query('SELECT plan FROM users WHERE id = $1', [user_id]);
+        const userPlan = userQuery.rows[0]?.plan || 'free';
+
+        if (userPlan === 'free') {
+            const productCountQuery = await db.query('SELECT COUNT(*) FROM products WHERE user_id = $1', [user_id]);
+            const productCount = parseInt(productCountQuery.rows[0].count);
+
+            if (productCount >= 17) {
+                return res.status(403).json({
+                    error: 'Limite do plano gratuito atingido (17 produtos). Atualize para o PRO para adicionar mais.'
+                });
+            }
+        }
+
         const newProduct = await db.query(
             'INSERT INTO products (user_id, name, category, stock, price, min_stock, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
             [user_id, name, category, stock, price, min_stock, image_url]

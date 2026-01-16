@@ -24,8 +24,14 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/finances', financeRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/team', require('./routes/teamRoutes'));
-app.get('/', (req, res) => {
-    res.send('Vitrine360 API is running');
+
+// Serve static files from React app
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../../client/dist')));
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
 });
 
 // Start server
